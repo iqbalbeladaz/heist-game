@@ -8,17 +8,34 @@
 // (any genre, any library you vendor under game/, or none), put your 3 or 4 PNG or JPEG screenshots
 // in screenshots/ (the first by name is the cover) and run it.
 //
+// Velvet Vault — entrypoint for my original heist game (see README.md).
 // Serve it locally with `node serve.ts`, then open http://localhost:8080.
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+//
+// Before copying anything I sanity-check the entry myself: the playable page
+// and at least three screenshots must be present, because a heist entry that
+// cannot show its museum, its guards and its alarm meter is not an entry.
 
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
 
+const ENTRY_TITLE = 'Velvet Vault — a tiny heist';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+
+if (!existsSync(join(here, 'game', 'index.html'))) {
+  throw new Error(`${ENTRY_TITLE}: game/index.html is missing, so there is no game to hand in`);
+}
+const shotNames = existsSync(join(here, 'screenshots'))
+  ? readdirSync(join(here, 'screenshots')).filter((name) => /\.(?:png|jpe?g)$/i.test(name)).sort()
+  : [];
+if (shotNames.length < 3) {
+  throw new Error(`${ENTRY_TITLE}: expected at least 3 screenshots, found ${shotNames.length}`);
+}
+console.log(`${ENTRY_TITLE}: handing in the game with screenshots ${shotNames.join(', ')}`);
 
 mkdirSync(out, { recursive: true });
 cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
